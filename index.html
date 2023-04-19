@@ -103,9 +103,9 @@
                                     <label class="form-label">Qtd. acertos possíveis</label>
                                     <div class="input-group">
                                         <div class="input-group-text">
-                                            <input class="form-check-input mt-0" type="checkbox" v-model="hasQtdPontosPossiveis">
+                                            <input class="form-check-input mt-0" type="checkbox" v-model="hasQtdAcertosPossiveis">
                                         </div>
-                                        <input type="number" class="form-control" v-model="qtdPontosPossiveis">
+                                        <input type="number" class="form-control" v-model="qtdAcertosPossiveis">
                                     </div>
                                 </div>
                                 <div class="col-6">
@@ -154,8 +154,8 @@
                                 </div>
                                 <div class="col-12">
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" id="checkViewAcertos" v-model="hasViewAcertos">
-                                        <label class="form-check-label" for="checkViewAcertos">Acertos</label>
+                                        <input class="form-check-input" type="checkbox" id="checkViewAcertos" v-model="hasViewPtsGanhos">
+                                        <label class="form-check-label" for="checkViewAcertos">Pontos Ganhos</label>
                                     </div>
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="checkbox" id="checkViewErros" v-model="hasViewErros">
@@ -164,6 +164,20 @@
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="checkbox" id="checkViewTempo" v-model="hasViewTempo">
                                         <label class="form-check-label" for="checkViewTempo">Tempo</label>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="checkSomAcertos" v-model="hasSomAcertos">
+                                        <label class="form-check-label" for="checkSomAcertos">Emitir som de Pontos Ganhos</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="checkSomErros" v-model="hasSomErros">
+                                        <label class="form-check-label" for="checkSomErros">Emitir som de Erros</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="checkSomFeedback" v-model="hasSomFeedback">
+                                        <label class="form-check-label" for="checkSomFeedback">Emitir som de Feedback</label>
                                     </div>
                                 </div>
                                 <div class="col-12 mt-0">
@@ -204,16 +218,20 @@
                 </div>
             </div>
             <div class="cards-right" :style="hasViewCaminhos ? { justifyContent: 'flex-end' } : {}">
-                <div v-if="hasViewAcertos || hasViewErros || hasViewTempo" class="score">
+                <div v-if="hasViewPtsGanhos || hasViewErros || hasViewTempo" class="score">
                     <div class="card text-bg-dark">
                         <div class="card-header text-center">
                             <h5 class="card-title">Pontuação</h5>
                         </div>
                         <div class="card-body" style="font-size: 20px;">
-                            <div v-if="hasViewAcertos" class="d-flex justify-content-between align-items-center">
+                            <div v-if="hasViewPtsGanhos" class="d-flex justify-content-between align-items-center">
+                                Pontos Ganhos <span class="badge bg-success rounded-pill">{{ buffer.ptsGanhos }}</span>
+                            </div>
+                            <hr class="mt-2">
+                            <div class="d-flex justify-content-between align-items-center">
                                 Acertos <span class="badge bg-success rounded-pill">{{ buffer.acertos }}</span>
                             </div>
-                            <hr v-if="hasViewErros && hasViewAcertos" class="mt-2">
+                            <hr v-if="hasViewErros && hasViewPtsGanhos" class="mt-2">
                             <div v-if="hasViewErros" class="d-flex justify-content-between align-items-center">
                                 Erros <span class="badge bg-danger rounded-pill">{{ buffer.erros }}</span>
                             </div>
@@ -291,8 +309,8 @@
         color: '#FFFF00',
         ptGanhosPorAcerto: 1,
         ptParaEncerrar: 50,
-        hasQtdPontosPossiveis: false,
-        qtdPontosPossiveis: 1,
+        hasQtdAcertosPossiveis: false,
+        qtdAcertosPossiveis: 1,
         hasQtdErrosPossiveis: false,
         qtdErrosPossiveis: 1,
         hasNumTentativas: false,
@@ -302,13 +320,17 @@
         hasViewInstrucao: true,
         instrucao: '',
         hasViewCaminhos: true,
-        hasViewAcertos: true,
+        hasViewPtsGanhos: true,
         hasViewErros: true,
         hasViewTempo: true,
+        hasSomAcertos: true,
+        hasSomErros: true,
+        hasSomFeedback: true,
         buffer: {
           sequencias: [],
           lagErros: [],
           lagAcertos: [],
+          ptsGanhos: 0,
           acertos: 0,
           erros: 0,
           tempo: 0
@@ -381,6 +403,7 @@
           sequencias: [],
           lagErros: [],
           lagAcertos: [],
+          ptsGanhos: 0,
           acertos: 0,
           erros: 0,
           tempo: 0
@@ -507,38 +530,38 @@
         file += `;${this.nome};${this.idade};${this.sexo};${this.experimentador}\n\n\n`
         file += ';Esquema em vigor;LAG;Pontos ganhos por acerto;Quantidade de pontos possíveis\n'
         file += `;${this.tipoPontuacao};${this.lag};${this.ptGanhosPorAcerto};${this.ptParaEncerrar}\n\n`
-        if (this.hasQtdPontosPossiveis || this.hasQtdErrosPossiveis || this.hasNumTentativas || this.hasTempo)  {
+        if (this.hasQtdAcertosPossiveis || this.hasQtdErrosPossiveis || this.hasNumTentativas || this.hasTempo)  {
           file += ';Critérios de Encerramento\n'
-          file += this.hasQtdPontosPossiveis ? ';Qtd. acertos possíveis' : ''
+          file += this.hasQtdAcertosPossiveis ? ';Qtd. acertos possíveis' : ''
           file += this.hasQtdErrosPossiveis ? ';Qtd. de erros possíveis' : ''
           file += this.hasNumTentativas ? ';Número de tentativas' : ''
           file += this.hasTempo ? ';Tempo' : ''
           file += '\n'
-          file += this.hasQtdPontosPossiveis ? `;${this.tipoPontuacao}` : ''
-          file += this.hasQtdErrosPossiveis ? `;${this.lag}` : ''
-          file += this.hasNumTentativas ? `;${this.ptGanhosPorAcerto}` : ''
-          file += this.hasTempo ? `;${this.ptParaEncerrar}` : ''
+          file += this.hasQtdAcertosPossiveis ? `;${this.qtdAcertosPossiveis}` : ''
+          file += this.hasQtdErrosPossiveis ? `;${this.qtdErrosPossiveis}` : ''
+          file += this.hasNumTentativas ? `;${this.numTentativas}` : ''
+          file += this.hasTempo ? `;${this.tempo}` : ''
           file += '\n\n'
         }
-        file += `;Acertos;Erros;Duração\n`
-        file += `;${this.buffer.acertos};${this.buffer.erros};${0x00}\n`
+        file += `;Pontos Ganhos;Acertos;Erros;Duração (s)\n`
+        file += `;${this.buffer.ptsGanhos};${this.buffer.acertos};${this.buffer.erros};${0x00}\n`
         file += `;;;;;;;;;;;;IES;Duração\n`
 
         for (const i in this.buffer.sequencias) {
           const sequencia = this.buffer.sequencias[i]
 
-          let lineSeq = 'SEQ-' + parseInt(i)+1 + ';'
-          let lineIRT = 'ITR-' + parseInt(i)+1 + ';'
+          let lineSeq = 'SEQ-' + (parseInt(i)+1) + ';'
+          let lineIRT = 'ITR-' + (parseInt(i)+1) + ';'
           for (const j in sequencia) {
             const item = sequencia[j]
             if (typeof item === 'object') {
               lineSeq += item.casa.replace(':' , '') + ';'
-              lineIRT += item.IRT + ';'
+              lineIRT += (item.IRT+'').replace('.', ',') + ';'
             }
           }
 
-          lineSeq += `;${sequencia.type};${sequencia[0].IES};${sequencia[0].duracao}\n`
-          lineIRT += `;;${sequencia[0].IES};${sequencia[0].duracao}\n`
+          lineSeq += `;${sequencia.type};${sequencia[0].IES};${(sequencia[8].duracao+'').replace('.', ',')}\n`
+          lineIRT += `;;${sequencia[0].IES};${(sequencia[8].duracao+'').replace('.', ',')}\n`
 
           file += lineSeq
           file += lineIRT
@@ -572,16 +595,17 @@
           this.buffer.sequencias.push(this.tempMatriz)
 
           if (this.tipoPontuacao === 'repeticao' || (this.tipoPontuacao === 'variacao' && parseInt(this.lag) < 2)) {
-            this.buffer.acertos += this.ptGanhosPorAcerto
+            this.buffer.ptsGanhos += this.ptGanhosPorAcerto
+            this.buffer.acertos += 1
           } else {
             this.buffer.lagAcertos.push(this.tempMatriz)
           }
         }
 
-        if (this.ptParaEncerrar <= this.buffer.acertos) {
+        if (this.ptParaEncerrar <= this.buffer.ptsGanhos) {
           this.startApp = false
         }
-        if (this.hasQtdPontosPossiveis && this.qtdPontosPossiveis <= this.buffer.acertos) {
+        if (this.hasQtdAcertosPossiveis && this.qtdAcertosPossiveis <= this.buffer.acertos) {
           this.startApp = false
         }
         if (this.hasQtdErrosPossiveis && this.qtdErrosPossiveis <= this.buffer.erros) {
@@ -595,7 +619,8 @@
         const hasSequencia = JSON.stringify(sequencias[0]) === JSON.stringify(newSequencia)
         if (hasSequencia) {
           this.tempMatriz.type = 'ACERTO'
-          this.buffer.acertos += this.ptGanhosPorAcerto
+          this.buffer.ptsGanhos += this.ptGanhosPorAcerto
+          this.buffer.acertos += 1
           this.emitAudioAcerto()
         } else {
           this.tempMatriz.type = 'ERRO'
@@ -609,7 +634,8 @@
         if (parseInt(this.lag) === 0) {
           lagSequencias = sequencias
         } else if (parseInt(this.lag) === 1) {
-          this.buffer.acertos += this.ptGanhosPorAcerto
+          this.buffer.ptsGanhos += this.ptGanhosPorAcerto
+          this.buffer.acertos += 1
           this.emitAudioAcerto()
           return
         } else if (parseInt(this.lag) > 1) {
@@ -633,39 +659,45 @@
             this.buffer.lagAcertos.push(this.tempMatriz)
           }
           if (this.buffer.lagAcertos.length === parseInt(this.lag) || parseInt(this.lag) === 0) {
-            this.buffer.acertos += this.ptGanhosPorAcerto
+            this.buffer.ptsGanhos += this.ptGanhosPorAcerto
+            this.buffer.acertos += 1
             this.buffer.lagAcertos = []
             this.buffer.lagErros = []
           }
         }
       },
       emitAudioAcerto () {
-        let context = new AudioContext()
-        let oscillator = context.createOscillator()
-        let contextGain = context.createGain()
+        if (this.hasSomAcertos) {
+          let context = new AudioContext()
+          let oscillator = context.createOscillator()
+          let contextGain = context.createGain()
 
-        oscillator.connect(contextGain)
-        oscillator.frequency.value = 440.0
-        contextGain.connect(context.destination)
-        oscillator.start(0)
+          oscillator.connect(contextGain)
+          oscillator.frequency.value = 440.0
+          contextGain.connect(context.destination)
+          oscillator.start(0)
 
-        contextGain.gain.exponentialRampToValueAtTime(
-          0.00001, context.currentTime + 1.8
-        )
+          contextGain.gain.exponentialRampToValueAtTime(
+            0.00001, context.currentTime + 1.8
+          )
+        }
       },
       emitAudioErro () {
-        let context = new AudioContext()
-        let oscillator = context.createOscillator()
-        let contextGain = context.createGain()
+        if (this.hasSomErros) {
+          let context = new AudioContext()
+          let oscillator = context.createOscillator()
+          let contextGain = context.createGain()
 
-        oscillator.connect(contextGain)
-        oscillator.frequency.value = 261.6
-        contextGain.connect(context.destination)
-        oscillator.start(0)
+          oscillator.connect(contextGain)
+          oscillator.frequency.value = 130.8
+          contextGain.connect(context.destination)
+          oscillator.start(0)
+          oscillator.type = 'triangle'
 
-        contextGain.gain.exponentialRampToValueAtTime(
-          0.00001, context.currentTime + 1.0
-        )
+          contextGain.gain.exponentialRampToValueAtTime(
+            0.0001, context.currentTime + 1.8
+          )
+        }
       }
     }
   }).mount('#myApp')
